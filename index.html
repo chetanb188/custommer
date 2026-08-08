@@ -43,13 +43,13 @@
   .panel h2{margin:0 0 12px;font-family:Georgia,serif;font-size:16px;color:var(--navy);}
   .row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
   .field{flex:1;min-width:140px;display:flex;flex-direction:column;gap:4px;}
-  label{font-size:11px;color:#403a2a;text-transform:uppercase;letter-spacing:0.5px;}
+  label{font-size:9px;color:#221f16;text-transform:uppercase;letter-spacing:0.5px;}
   input[type=text], input[type=tel], select, textarea{
     font-family:inherit;font-size:14px;padding:8px;border:1px solid var(--line);
     border-radius:3px;background:var(--paper);color:var(--ink);
   }
   textarea{resize:vertical;min-height:50px;}
-  input[readonly]{background:var(--paper-dark);color:#403a2a;cursor:default;}
+  input[readonly]{background:var(--paper-dark);color:#221f16;cursor:default;}
   button{
     font-family:inherit;font-size:13px;padding:9px 16px;border:none;border-radius:3px;
     cursor:pointer;background:var(--navy);color:#fff;letter-spacing:0.3px;
@@ -76,7 +76,7 @@
   }
   .entry-head:hover{background:var(--paper-dark);}
   .entry-name{font-family:Georgia,serif;font-size:16px;font-weight:bold;color:var(--navy);}
-  .entry-meta{font-size:11px;color:#403a2a;}
+  .entry-meta{font-size:11px;color:#221f16;}
   .stamp{
     font-size:10px;font-weight:bold;letter-spacing:1px;padding:4px 10px;
     border:2px solid; border-radius:3px; transform:rotate(-3deg); text-transform:uppercase;
@@ -87,14 +87,14 @@
 
   .entry-body{padding:0 14px 14px;border-top:1px dashed var(--line);display:none;}
   .entry-body.open{display:block;}
-  .info-line{font-size:12px;margin:8px 0 4px;color:#2a261c;}
+  .info-line{font-size:12px;margin:8px 0 4px;color:#171410;}
   .log-list{margin:10px 0;padding-left:0;list-style:none;}
   .log-item{
     font-size:12px;padding:8px 10px;background:var(--paper);border-left:3px solid var(--mustard);
     margin-bottom:6px;border-radius:2px;
   }
   .log-item .who{font-weight:bold;color:var(--navy);}
-  .log-item .when{color:#403a2a;font-size:10px;float:right;}
+  .log-item .when{color:#221f16;font-size:10px;float:right;}
   .status-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
   .status-btn{
     font-size:11px;padding:6px 10px;border-radius:3px;cursor:pointer;border:1px solid var(--line);background:#fff;
@@ -107,9 +107,9 @@
   .add-log select{flex:0 0 120px;}
   .add-log input{flex:1;min-width:120px;}
 
-  .empty{text-align:center;padding:40px 10px;color:#544e3c;font-size:13px;}
-  .note{font-size:11px;color:#544e3c;margin-bottom:14px;}
-  .loading{text-align:center;padding:30px;color:#544e3c;}
+  .empty{text-align:center;padding:40px 10px;color:#2e2a1e;font-size:13px;}
+  .note{font-size:11px;color:#2e2a1e;margin-bottom:14px;}
+  .loading{text-align:center;padding:30px;color:#2e2a1e;}
 </style>
 </head>
 <body>
@@ -169,6 +169,7 @@
     <div class="tab" data-status="SALE">Sale</div>
     <div class="tab" data-status="REJECT">Reject</div>
     <select id="personFilter"><option value="ALL">Badha members</option></select>
+    <input type="text" id="searchBox" placeholder="🔍 Naam ke phone thi shodho..." style="flex:1;min-width:160px;padding:6px 10px;font-size:12px;border:1px solid var(--line);border-radius:20px;background:#fff;">
   </div>
 
   <div id="list"><div class="loading">Loading entries...</div></div>
@@ -204,6 +205,7 @@ const team = ['HEMANSHUBHAI','VIPULBHAI','DILIPBHAI','PAKALAL','CHETAN'];
 let customers = [];
 let statusFilter = 'ALL';
 let personFilter = 'ALL';
+let searchTerm = '';
 let openId = null;
 
 async function saveCustomers(){
@@ -255,6 +257,12 @@ function renderList(){
   let filtered = customers.filter(c=>{
     if(statusFilter!=='ALL' && c.status!==statusFilter) return false;
     if(personFilter!=='ALL' && c.enteredBy!==personFilter) return false;
+    if(searchTerm){
+      const t = searchTerm.toLowerCase();
+      const inName = (c.name||'').toLowerCase().includes(t);
+      const inPhone = (c.phone||'').toLowerCase().includes(t);
+      if(!inName && !inPhone) return false;
+    }
     return true;
   });
   filtered.sort((a,b)=> b.createdAt - a.createdAt);
@@ -379,6 +387,10 @@ document.getElementById('personFilter').addEventListener('change', (e)=>{
   personFilter = e.target.value;
   renderList();
 });
+document.getElementById('searchBox').addEventListener('input', (e)=>{
+  searchTerm = e.target.value.trim();
+  renderList();
+});
 
 renderSelects();
 setTodayDate();
@@ -386,3 +398,4 @@ startListening();
 </script>
 </body>
 </html>
+
