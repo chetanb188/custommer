@@ -157,6 +157,19 @@
       </div>
     </div>
     <div class="row">
+      <div class="field">
+        <label>Kai Rite Aavya</label>
+        <select id="custSource">
+          <option value="DIRECT">Jaate (Direct)</option>
+          <option value="BROKER">Broker Dwara</option>
+        </select>
+      </div>
+      <div class="field" id="brokerNameField" style="display:none;">
+        <label>Broker Nu Naam</label>
+        <input type="text" id="custBrokerName" placeholder="e.g. Suresh bhai">
+      </div>
+    </div>
+    <div class="row">
       <div class="field" style="flex:0 0 100%;">
         <label>Pehla Note (optional)</label>
         <textarea id="custNote" placeholder="Kai vaat thai hoy to..."></textarea>
@@ -284,7 +297,7 @@ function renderList(){
     head.innerHTML = `
       <div>
         <div class="entry-name">${escapeHtml(c.name)}</div>
-        <div class="entry-meta">${escapeHtml(c.interest||'—')} · Entry: ${escapeHtml(c.enteredBy)} · ${fmtTime(c.createdAt)}</div>
+        <div class="entry-meta">${escapeHtml(c.interest||'—')} · Entry: ${escapeHtml(c.enteredBy)} · ${fmtTime(c.createdAt)}${c.source==='BROKER' ? ' · Broker: ' + escapeHtml(c.brokerName||'—') : ' · Jaate'}</div>
       </div>
       <div class="stamp ${c.status}">${c.status}</div>
     `;
@@ -350,6 +363,10 @@ function renderList(){
   });
 }
 
+document.getElementById('custSource').addEventListener('change', (e)=>{
+  document.getElementById('brokerNameField').style.display = (e.target.value==='BROKER') ? 'flex' : 'none';
+});
+
 document.getElementById('addBtn').addEventListener('click', async ()=>{
   if(!configReady){ alert('Pehla Firebase config set karo (script ni upar).'); return; }
   const name = document.getElementById('custName').value.trim();
@@ -357,11 +374,20 @@ document.getElementById('addBtn').addEventListener('click', async ()=>{
   const interest = document.getElementById('custInterest').value.trim();
   const enteredBy = document.getElementById('custEnteredBy').value;
   const note = document.getElementById('custNote').value.trim();
+  const source = document.getElementById('custSource').value;
+  const brokerName = source==='BROKER' ? document.getElementById('custBrokerName').value.trim() : '';
   if(!name){ alert('Customer nu naam nakho.'); return; }
+  if(phone){
+    const dup = customers.find(c => (c.phone||'').trim() === phone);
+    if(dup){
+      alert('Aa mobile number pehla thi j save chhe — "' + dup.name + '" na naam thi entry chhe. Duplicate entry save nahi thai.');
+      return;
+    }
+  }
 
   const entry = {
     id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
-    name, phone, interest, enteredBy,
+    name, phone, interest, enteredBy, source, brokerName,
     status: 'PENDING',
     createdAt: Date.now(),
     log: note ? [{by: enteredBy, note, at: Date.now()}] : []
@@ -372,6 +398,9 @@ document.getElementById('addBtn').addEventListener('click', async ()=>{
   document.getElementById('custName').value='';
   document.getElementById('custPhone').value='';
   document.getElementById('custNote').value='';
+  document.getElementById('custBrokerName').value='';
+  document.getElementById('custSource').value='DIRECT';
+  document.getElementById('brokerNameField').style.display='none';
   setTodayDate();
 
   openId = entry.id;
