@@ -305,6 +305,7 @@ function renderList(){
         <div class="status-btn SALE ${c.status==='SALE'?'on':''}" data-s="SALE">Sale Thai Gayu</div>
         <div class="status-btn REJECT ${c.status==='REJECT'?'on':''}" data-s="REJECT">Reject</div>
       </div>
+      <button class="deleteBtn" style="margin-top:12px;background:var(--reject);">Entry Delete Karo</button>
     `;
 
     const logSel = body.querySelector('.logBy');
@@ -325,6 +326,13 @@ function renderList(){
         c.status = btn.dataset.s;
         await saveCustomers();
       });
+    });
+
+    body.querySelector('.deleteBtn').addEventListener('click', async ()=>{
+      if(!confirm(escapeHtml(c.name) + ' ni entry delete karvi chhe? Aa pachi revert nahi thai shake.')) return;
+      customers = customers.filter(x=>x.id!==c.id);
+      openId = null;
+      await saveCustomers();
     });
 
     entry.appendChild(body);
