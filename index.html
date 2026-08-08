@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Ledger</title>
+<style>
+  :root{
+    --paper:#EFE8D8;
+    --paper-dark:#E3DAC4;
+    --ink:#23252B;
+    --navy:#1B2A4A;
+    --navy-light:#2E4270;
+    --mustard:#D9A441;
+    --sale:#3F7D4F;
+    --reject:#A63D40;
+    --pending:#8A6D3B;
+    --line:#c9bfa2;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Courier New', ui-monospace, monospace;
+    min-height:100vh;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:20px 16px 60px;}
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:3px double var(--navy);
+    padding-bottom:12px;margin-bottom:18px;flex-wrap:wrap;gap:10px;
+  }
+  header h1{
+    font-family:Georgia, 'Times New Roman', serif;
+    font-size:28px;letter-spacing:0.5px;margin:0;color:var(--navy);
+  }
+  header .sub{font-size:12px;color:#5a5548;margin-top:4px;}
+  .panel{
+    background:#fff;border:1px solid var(--line);border-radius:4px;
+    padding:16px;margin-bottom:20px;box-shadow:2px 2px 0 var(--line);
+  }
+  .panel h2{margin:0 0 12px;font-family:Georgia,serif;font-size:16px;color:var(--navy);}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .field{flex:1;min-width:140px;display:flex;flex-direction:column;gap:4px;}
+  label{font-size:11px;color:#6b6656;text-transform:uppercase;letter-spacing:0.5px;}
+  input[type=text], input[type=tel], select, textarea{
+    font-family:inherit;font-size:14px;padding:8px;border:1px solid var(--line);
+    border-radius:3px;background:var(--paper);color:var(--ink);
+  }
+  textarea{resize:vertical;min-height:50px;}
+  input[readonly]{background:var(--paper-dark);color:#6b6656;cursor:default;}
+  button{
+    font-family:inherit;font-size:13px;padding:9px 16px;border:none;border-radius:3px;
+    cursor:pointer;background:var(--navy);color:#fff;letter-spacing:0.3px;
+  }
+  button:hover{background:var(--navy-light);}
+  button.secondary{background:transparent;color:var(--navy);border:1px solid var(--navy);}
+  button.secondary:hover{background:var(--paper-dark);}
+
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+  .filters select{padding:6px 8px;font-size:12px;}
+  .tab{
+    padding:6px 12px;border:1px solid var(--line);border-radius:20px;font-size:12px;
+    background:#fff;cursor:pointer;
+  }
+  .tab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+  .entry{
+    background:#fff;border:1px solid var(--line);border-radius:4px;margin-bottom:12px;
+    overflow:hidden;
+  }
+  .entry-head{
+    display:flex;justify-content:space-between;align-items:center;padding:12px 14px;
+    cursor:pointer;gap:10px;flex-wrap:wrap;
+  }
+  .entry-head:hover{background:var(--paper-dark);}
+  .entry-name{font-family:Georgia,serif;font-size:16px;font-weight:bold;color:var(--navy);}
+  .entry-meta{font-size:11px;color:#6b6656;}
+  .stamp{
+    font-size:10px;font-weight:bold;letter-spacing:1px;padding:4px 10px;
+    border:2px solid; border-radius:3px; transform:rotate(-3deg); text-transform:uppercase;
+  }
+  .stamp.PENDING{color:var(--pending);border-color:var(--pending);}
+  .stamp.SALE{color:var(--sale);border-color:var(--sale);}
+  .stamp.REJECT{color:var(--reject);border-color:var(--reject);}
+
+  .entry-body{padding:0 14px 14px;border-top:1px dashed var(--line);display:none;}
+  .entry-body.open{display:block;}
+  .info-line{font-size:12px;margin:8px 0 4px;color:#4a4636;}
+  .log-list{margin:10px 0;padding-left:0;list-style:none;}
+  .log-item{
+    font-size:12px;padding:8px 10px;background:var(--paper);border-left:3px solid var(--mustard);
+    margin-bottom:6px;border-radius:2px;
+  }
+  .log-item .who{font-weight:bold;color:var(--navy);}
+  .log-item .when{color:#6b6656;font-size:10px;float:right;}
+  .status-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .status-btn{
+    font-size:11px;padding:6px 10px;border-radius:3px;cursor:pointer;border:1px solid var(--line);background:#fff;
+  }
+  .status-btn.PENDING.on{background:var(--pending);color:#fff;border-color:var(--pending);}
+  .status-btn.SALE.on{background:var(--sale);color:#fff;border-color:var(--sale);}
+  .status-btn.REJECT.on{background:var(--reject);color:#fff;border-color:var(--reject);}
+
+  .add-log{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .add-log select{flex:0 0 120px;}
+  .add-log input{flex:1;min-width:120px;}
+
+  .empty{text-align:center;padding:40px 10px;color:#8a8471;font-size:13px;}
+  .note{font-size:11px;color:#8a8471;margin-bottom:14px;}
+  .loading{text-align:center;padding:30px;color:#8a8471;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Customer Ledger</h1>
+      <div class="sub">Shared entry book — 5 members</div>
+    </div>
+  </header>
+
+  <div class="note">⚠ Data is shared — all 5 team members see and can edit every entry here.</div>
+
+  <div class="panel">
+    <h2>+ Naya Customer Entry</h2>
+    <div class="row">
+      <div class="field">
+        <label>Customer Naam</label>
+        <input type="text" id="custName" placeholder="e.g. Rakesh Patel">
+      </div>
+      <div class="field">
+        <label>Phone</label>
+        <input type="tel" id="custPhone" placeholder="98xxxxxxxx">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Interest / Product</label>
+        <select id="custInterest">
+          <option value="1BHK FLAT">1BHK FLAT</option>
+          <option value="2BHK FLAT">2BHK FLAT</option>
+          <option value="2BHK ROWHOUSE">2BHK ROWHOUSE</option>
+          <option value="3BHK ROWHOUSE">3BHK ROWHOUSE</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Entry Date</label>
+        <input type="text" id="custDate" readonly>
+      </div>
+      <div class="field">
+        <label>Entry Karnar (Aapnu Naam)</label>
+        <select id="custEnteredBy"></select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field" style="flex:0 0 100%;">
+        <label>Pehla Note (optional)</label>
+        <textarea id="custNote" placeholder="Kai vaat thai hoy to..."></textarea>
+      </div>
+    </div>
+    <button id="addBtn">Entry Save Karo</button>
+  </div>
+
+  <div class="filters">
+    <div class="tab active" data-status="ALL">Badha</div>
+    <div class="tab" data-status="PENDING">Pending</div>
+    <div class="tab" data-status="SALE">Sale</div>
+    <div class="tab" data-status="REJECT">Reject</div>
+    <select id="personFilter"><option value="ALL">Badha members</option></select>
+  </div>
+
+  <div id="list"><div class="loading">Loading entries...</div></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ====== 1) AAHIYA TAMARU FIREBASE CONFIG PASTE KARO ======
+   Firebase console (console.firebase.google.com) ma free project banavi,
+   Firestore Database enable kari, Web app add kari, config copy karo. */
+const firebaseConfig = {
+  apiKey: "AIzaSyDi1vY10SUKvE7xLbE12qfk3GJSgdx51wQ",
+  authDomain: "web-app-9a17b.firebaseapp.com",
+  projectId: "web-app-9a17b",
+  storageBucket: "web-app-9a17b.firebasestorage.app",
+  messagingSenderId: "695751532381",
+  appId: "1:695751532381:web:051904e1bc0c2c2b6392b4",
+  measurementId: "G-04C81199JW"
+};
+/* ========================================================== */
+
+let db = null;
+let configReady = firebaseConfig.apiKey !== "PASTE_API_KEY";
+if(configReady){
+  const app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+}
+const LEDGER_DOC = 'ledger_data';
+
+const team = ['HEMANSHUBHAI','VIPULBHAI','DILIPBHAI','PAKALAL','CHETAN'];
+let customers = [];
+let statusFilter = 'ALL';
+let personFilter = 'ALL';
+let openId = null;
+
+async function saveCustomers(){
+  if(!configReady) return;
+  try{
+    await setDoc(doc(db, 'customer_ledger', LEDGER_DOC), { list: customers });
+  }catch(e){ console.error('save error', e); alert('Save ma error aavi: ' + e.message); }
+}
+
+function startListening(){
+  if(!configReady){
+    document.getElementById('list').innerHTML =
+      '<div class="empty">⚠ Firebase config set nathi thayu. Script ni upar "firebaseConfig" ma tamara Firebase project ni details paste karo, pachi aa file save/refresh karo.</div>';
+    return;
+  }
+  onSnapshot(doc(db, 'customer_ledger', LEDGER_DOC), (snap)=>{
+    customers = (snap.exists() && snap.data().list) ? snap.data().list : [];
+    renderList();
+  }, (err)=>{
+    console.error(err);
+    document.getElementById('list').innerHTML = '<div class="empty">⚠ Data load nathi thayu: ' + err.message + '</div>';
+  });
+}
+
+function renderSelects(){
+  const sel = document.getElementById('custEnteredBy');
+  sel.innerHTML = team.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+  const pf = document.getElementById('personFilter');
+  pf.innerHTML = '<option value="ALL">Badha members</option>' + team.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+  pf.value = personFilter;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function setTodayDate(){
+  const d = new Date();
+  document.getElementById('custDate').value = d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+function fmtTime(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) + ' ' + d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}
+
+function renderList(){
+  const list = document.getElementById('list');
+  let filtered = customers.filter(c=>{
+    if(statusFilter!=='ALL' && c.status!==statusFilter) return false;
+    if(personFilter!=='ALL' && c.enteredBy!==personFilter) return false;
+    return true;
+  });
+  filtered.sort((a,b)=> b.createdAt - a.createdAt);
+
+  if(filtered.length===0){
+    list.innerHTML = '<div class="empty">Koi entry nathi. Upar thi navi entry ummerо.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  filtered.forEach(c=>{
+    const entry = document.createElement('div');
+    entry.className = 'entry';
+
+    const head = document.createElement('div');
+    head.className = 'entry-head';
+    head.innerHTML = `
+      <div>
+        <div class="entry-name">${escapeHtml(c.name)}</div>
+        <div class="entry-meta">${escapeHtml(c.interest||'—')} · Entry: ${escapeHtml(c.enteredBy)} · ${fmtTime(c.createdAt)}</div>
+      </div>
+      <div class="stamp ${c.status}">${c.status}</div>
+    `;
+    head.addEventListener('click', ()=>{
+      openId = (openId===c.id) ? null : c.id;
+      renderList();
+    });
+    entry.appendChild(head);
+
+    const body = document.createElement('div');
+    body.className = 'entry-body' + (openId===c.id ? ' open' : '');
+
+    let logsHtml = (c.log||[]).slice().reverse().map(l=>`
+      <li class="log-item"><span class="when">${fmtTime(l.at)}</span><span class="who">${escapeHtml(l.by)}:</span> ${escapeHtml(l.note)}</li>
+    `).join('');
+    if(!logsHtml) logsHtml = '<div class="info-line">Hju koi vaatchit nondh nathi.</div>';
+
+    body.innerHTML = `
+      <div class="info-line">Phone: ${escapeHtml(c.phone||'—')}</div>
+      <ul class="log-list">${logsHtml}</ul>
+      <div class="add-log">
+        <select class="logBy"></select>
+        <input type="text" class="logNote" placeholder="Su vaat thai? (e.g. call kario, price puchi)">
+        <button class="addLogBtn">Nondh Karo</button>
+      </div>
+      <div class="status-row">
+        <div class="status-btn PENDING ${c.status==='PENDING'?'on':''}" data-s="PENDING">Pending</div>
+        <div class="status-btn SALE ${c.status==='SALE'?'on':''}" data-s="SALE">Sale Thai Gayu</div>
+        <div class="status-btn REJECT ${c.status==='REJECT'?'on':''}" data-s="REJECT">Reject</div>
+      </div>
+    `;
+
+    const logSel = body.querySelector('.logBy');
+    logSel.innerHTML = team.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+
+    body.querySelector('.addLogBtn').addEventListener('click', async ()=>{
+      const noteInp = body.querySelector('.logNote');
+      const note = noteInp.value.trim();
+      if(!note) return;
+      c.log = c.log || [];
+      c.log.push({by: logSel.value, note, at: Date.now()});
+      noteInp.value = '';
+      await saveCustomers();
+    });
+
+    body.querySelectorAll('.status-btn').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        c.status = btn.dataset.s;
+        await saveCustomers();
+      });
+    });
+
+    entry.appendChild(body);
+    list.appendChild(entry);
+  });
+}
+
+document.getElementById('addBtn').addEventListener('click', async ()=>{
+  if(!configReady){ alert('Pehla Firebase config set karo (script ni upar).'); return; }
+  const name = document.getElementById('custName').value.trim();
+  const phone = document.getElementById('custPhone').value.trim();
+  const interest = document.getElementById('custInterest').value.trim();
+  const enteredBy = document.getElementById('custEnteredBy').value;
+  const note = document.getElementById('custNote').value.trim();
+  if(!name){ alert('Customer nu naam nakho.'); return; }
+
+  const entry = {
+    id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    name, phone, interest, enteredBy,
+    status: 'PENDING',
+    createdAt: Date.now(),
+    log: note ? [{by: enteredBy, note, at: Date.now()}] : []
+  };
+  customers.push(entry);
+  await saveCustomers();
+
+  document.getElementById('custName').value='';
+  document.getElementById('custPhone').value='';
+  document.getElementById('custNote').value='';
+  setTodayDate();
+
+  openId = entry.id;
+});
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    statusFilter = tab.dataset.status;
+    renderList();
+  });
+});
+document.getElementById('personFilter').addEventListener('change', (e)=>{
+  personFilter = e.target.value;
+  renderList();
+});
+
+renderSelects();
+setTodayDate();
+startListening();
+</script>
+</body>
+</html>
