@@ -23,6 +23,7 @@
     background:var(--paper);
     color:var(--ink);
     font-family:'Courier New', ui-monospace, monospace;
+    font-weight:bold;
     min-height:100vh;
   }
   .wrap{max-width:900px;margin:0 auto;padding:20px 16px 60px;}
@@ -34,35 +35,36 @@
   header h1{
     font-family:Georgia, 'Times New Roman', serif;
     font-size:28px;letter-spacing:0.5px;margin:0;color:var(--navy);
+    font-weight:bold;
   }
-  header .sub{font-size:12px;color:#3a352a;margin-top:4px;}
+  header .sub{font-size:12px;color:#3a352a;margin-top:4px;font-weight:bold;}
   .panel{
     background:#fff;border:1px solid var(--line);border-radius:4px;
     padding:16px;margin-bottom:20px;box-shadow:2px 2px 0 var(--line);
   }
-  .panel h2{margin:0 0 12px;font-family:Georgia,serif;font-size:16px;color:var(--navy);}
+  .panel h2{margin:0 0 12px;font-family:Georgia,serif;font-size:16px;color:var(--navy);font-weight:bold;}
   .row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
   .field{flex:1;min-width:140px;display:flex;flex-direction:column;gap:4px;}
-  label{font-size:9px;color:#221f16;text-transform:uppercase;letter-spacing:0.5px;}
+  label{font-size:9px;color:#221f16;text-transform:uppercase;letter-spacing:0.5px;font-weight:bold;}
   input[type=text], input[type=tel], select, textarea{
     font-family:inherit;font-size:14px;padding:8px;border:1px solid var(--line);
-    border-radius:3px;background:var(--paper);color:var(--ink);
+    border-radius:3px;background:var(--paper);color:var(--ink);font-weight:bold;
   }
   textarea{resize:vertical;min-height:50px;}
   input[readonly]{background:var(--paper-dark);color:#221f16;cursor:default;}
   button{
     font-family:inherit;font-size:13px;padding:9px 16px;border:none;border-radius:3px;
-    cursor:pointer;background:var(--navy);color:#fff;letter-spacing:0.3px;
+    cursor:pointer;background:var(--navy);color:#fff;letter-spacing:0.3px;font-weight:bold;
   }
   button:hover{background:var(--navy-light);}
   button.secondary{background:transparent;color:var(--navy);border:1px solid var(--navy);}
   button.secondary:hover{background:var(--paper-dark);}
 
   .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
-  .filters select{padding:6px 8px;font-size:12px;}
+  .filters select{padding:6px 8px;font-size:12px;font-weight:bold;}
   .tab{
     padding:6px 12px;border:1px solid var(--line);border-radius:20px;font-size:12px;
-    background:#fff;cursor:pointer;
+    background:#fff;cursor:pointer;font-weight:bold;
   }
   .tab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
 
@@ -76,7 +78,7 @@
   }
   .entry-head:hover{background:var(--paper-dark);}
   .entry-name{font-family:Georgia,serif;font-size:16px;font-weight:bold;color:var(--navy);}
-  .entry-meta{font-size:11px;color:#221f16;}
+  .entry-meta{font-size:11px;color:#221f16;font-weight:bold;}
   .stamp{
     font-size:10px;font-weight:bold;letter-spacing:1px;padding:4px 10px;
     border:2px solid; border-radius:3px; transform:rotate(-3deg); text-transform:uppercase;
@@ -87,17 +89,17 @@
 
   .entry-body{padding:0 14px 14px;border-top:1px dashed var(--line);display:none;}
   .entry-body.open{display:block;}
-  .info-line{font-size:12px;margin:8px 0 4px;color:#171410;}
+  .info-line{font-size:12px;margin:8px 0 4px;color:#171410;font-weight:bold;}
   .log-list{margin:10px 0;padding-left:0;list-style:none;}
   .log-item{
     font-size:12px;padding:8px 10px;background:var(--paper);border-left:3px solid var(--mustard);
-    margin-bottom:6px;border-radius:2px;
+    margin-bottom:6px;border-radius:2px;font-weight:bold;
   }
   .log-item .who{font-weight:bold;color:var(--navy);}
-  .log-item .when{color:#221f16;font-size:10px;float:right;}
+  .log-item .when{color:#221f16;font-size:10px;float:right;font-weight:bold;}
   .status-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
   .status-btn{
-    font-size:11px;padding:6px 10px;border-radius:3px;cursor:pointer;border:1px solid var(--line);background:#fff;
+    font-size:11px;padding:6px 10px;border-radius:3px;cursor:pointer;border:1px solid var(--line);background:#fff;font-weight:bold;
   }
   .status-btn.PENDING.on{background:var(--pending);color:#fff;border-color:var(--pending);}
   .status-btn.SALE.on{background:var(--sale);color:#fff;border-color:var(--sale);}
@@ -107,9 +109,9 @@
   .add-log select{flex:0 0 120px;}
   .add-log input{flex:1;min-width:120px;}
 
-  .empty{text-align:center;padding:40px 10px;color:#2e2a1e;font-size:13px;}
-  .note{font-size:11px;color:#2e2a1e;margin-bottom:14px;}
-  .loading{text-align:center;padding:30px;color:#2e2a1e;}
+  .empty{text-align:center;padding:40px 10px;color:#2e2a1e;font-size:13px;font-weight:bold;}
+  .note{font-size:11px;color:#2e2a1e;margin-bottom:14px;font-weight:bold;}
+  .loading{text-align:center;padding:30px;color:#2e2a1e;font-weight:bold;}
 </style>
 </head>
 <body>
@@ -169,7 +171,7 @@
     <div class="tab" data-status="SALE">Sale</div>
     <div class="tab" data-status="REJECT">Reject</div>
     <select id="personFilter"><option value="ALL">Badha members</option></select>
-    <input type="text" id="searchBox" placeholder="🔍 Naam ke phone thi shodho..." style="flex:1;min-width:160px;padding:6px 10px;font-size:12px;border:1px solid var(--line);border-radius:20px;background:#fff;">
+    <input type="text" id="searchBox" placeholder="🔍 Naam ke phone thi shodho..." style="flex:1;min-width:160px;padding:6px 10px;font-size:12px;border:1px solid var(--line);border-radius:20px;background:#fff;font-weight:bold;">
   </div>
 
   <div id="list"><div class="loading">Loading entries...</div></div>
