@@ -222,6 +222,7 @@ let statusFilter = 'ALL';
 let personFilter = 'ALL';
 let searchTerm = '';
 let openId = null;
+let confirmDeleteId = null;
 
 async function saveCustomers(){
   if(!configReady) return;
@@ -329,6 +330,11 @@ function renderList(){
         <div class="status-btn REJECT ${c.status==='REJECT'?'on':''}" data-s="REJECT">Reject</div>
       </div>
       <button class="deleteBtn" style="margin-top:12px;background:var(--reject);">Entry Delete Karo</button>
+      <div class="delete-confirm" style="display:${confirmDeleteId===c.id ? 'flex' : 'none'};gap:8px;margin-top:10px;align-items:center;">
+        <span style="font-size:12px;">Pakku delete karvu chhe? Aa revert nahi thai shake.</span>
+        <button class="confirmDeleteBtn" style="background:var(--reject);">Haa, Delete Karo</button>
+        <button class="cancelDeleteBtn secondary" type="button">Na, Rakho</button>
+      </div>
     `;
 
     const logSel = body.querySelector('.logBy');
@@ -351,12 +357,22 @@ function renderList(){
       });
     });
 
-    body.querySelector('.deleteBtn').addEventListener('click', async ()=>{
-      if(!confirm(escapeHtml(c.name) + ' ni entry delete karvi chhe? Aa pachi revert nahi thai shake.')) return;
-      customers = customers.filter(x=>x.id!==c.id);
-      openId = null;
-      await saveCustomers();
+    body.querySelector('.deleteBtn').addEventListener('click', ()=>{
+      confirmDeleteId = c.id;
+      renderList();
     });
+    if(confirmDeleteId===c.id){
+      body.querySelector('.confirmDeleteBtn').addEventListener('click', async ()=>{
+        customers = customers.filter(x=>x.id!==c.id);
+        confirmDeleteId = null;
+        openId = null;
+        await saveCustomers();
+      });
+      body.querySelector('.cancelDeleteBtn').addEventListener('click', ()=>{
+        confirmDeleteId = null;
+        renderList();
+      });
+    }
 
     entry.appendChild(body);
     list.appendChild(entry);
@@ -377,12 +393,12 @@ document.getElementById('addBtn').addEventListener('click', async ()=>{
   const source = document.getElementById('custSource').value;
   const brokerName = source==='BROKER' ? document.getElementById('custBrokerName').value.trim() : '';
   if(!name){ alert('Customer nu naam nakho.'); return; }
-  if(phone){
-    const dup = customers.find(c => (c.phone||'').trim() === phone);
-    if(dup){
-      alert('Aa mobile number pehla thi j save chhe — "' + dup.name + '" na naam thi entry chhe. Duplicate entry save nahi thai.');
-      return;
-    }
+  if(!phone){ alert('Mobile number nakhvo jaruri chhe.'); return; }
+  if(source==='BROKER' && !brokerName){ alert('Broker dwara aavya chhe to Broker nu naam nakhvu jaruri chhe.'); return; }
+  const dup = customers.find(c => (c.phone||'').trim() === phone);
+  if(dup){
+    alert('Aa mobile number pehla thi j save chhe — "' + dup.name + '" na naam thi entry chhe. Duplicate entry save nahi thai.');
+    return;
   }
 
   const entry = {
