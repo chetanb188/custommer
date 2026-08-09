@@ -263,6 +263,16 @@ function setTodayDate(){
   document.getElementById('custDate').value = d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
 }
 
+function phoneLinksHtml(phone){
+  const clean = (phone||'').trim();
+  if(!clean) return '—';
+  const digits = clean.replace(/[^0-9]/g,'');
+  const waDigits = digits.length===10 ? '91'+digits : digits;
+  return `${escapeHtml(clean)}
+    <a href="tel:${digits}" title="Call Karo" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(--sale);border-radius:50%;margin-left:10px;text-decoration:none;vertical-align:middle;">📞</a>
+    <a href="https://wa.me/${waDigits}" target="_blank" rel="noopener" title="WhatsApp Karo" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#25D366;border-radius:50%;margin-left:10px;text-decoration:none;vertical-align:middle;">💬</a>`;
+}
+
 function fmtTime(ts){
   const d = new Date(ts);
   return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) + ' ' + d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
@@ -317,7 +327,7 @@ function renderList(){
     if(!logsHtml) logsHtml = '<div class="info-line">Hju koi vaatchit nondh nathi.</div>';
 
     body.innerHTML = `
-      <div class="info-line">Phone: ${escapeHtml(c.phone||'—')}</div>
+      <div class="info-line">Phone: ${phoneLinksHtml(c.phone)}</div>
       <ul class="log-list">${logsHtml}</ul>
       <div class="add-log">
         <select class="logBy"></select>
@@ -445,3 +455,4 @@ startListening();
 </script>
 </body>
 </html>
+
