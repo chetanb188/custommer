@@ -356,7 +356,7 @@ function renderList(){
           </div>
           <div class="field editBrokerField"><label>Broker Nu Naam</label><input type="text" class="editBrokerName" value="${escapeHtml(c.brokerName||'')}"></div>
         </div>
-        <div style="display:flex;gap:8px;margin-top:6px;">
+        <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
           <button class="saveEditBtn">Save Karo</button>
           <button class="cancelEditBtn secondary" type="button">Cancel</button>
         </div>
@@ -421,11 +421,11 @@ function renderList(){
         <div class="status-btn SALE ${c.status==='SALE'?'on':''}" data-s="SALE">Sale Thai Gayu</div>
         <div class="status-btn REJECT ${c.status==='REJECT'?'on':''}" data-s="REJECT">Reject</div>
       </div>
-      <div style="display:flex;gap:8px;margin-top:12px;">
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
         <button class="editBtn secondary" type="button">Edit Karo</button>
         <button class="deleteBtn" style="background:var(--reject);">Entry Delete Karo</button>
       </div>
-      <div class="delete-confirm" style="display:${confirmDeleteId===c.id ? 'flex' : 'none'};gap:8px;margin-top:10px;align-items:center;">
+      <div class="delete-confirm" style="display:${confirmDeleteId===c.id ? 'flex' : 'none'};gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap;">
         <span style="font-size:12px;">Pakku delete karvu chhe? Aa revert nahi thai shake.</span>
         <button class="confirmDeleteBtn" style="background:var(--reject);">Haa, Delete Karo</button>
         <button class="cancelDeleteBtn secondary" type="button">Na, Rakho</button>
@@ -548,6 +548,7 @@ restrictPhoneInput(document.getElementById('custPhone'));
 </script>
 </body>
 </html>
+
 
 
 
