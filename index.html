@@ -134,7 +134,7 @@
       </div>
       <div class="field">
         <label>Phone</label>
-        <input type="tel" id="custPhone" placeholder="98xxxxxxxx">
+        <input type="tel" id="custPhone" placeholder="98xxxxxxxx" maxlength="10" inputmode="numeric" pattern="[0-9]{10}">
       </div>
     </div>
     <div class="row">
@@ -223,6 +223,7 @@ let personFilter = 'ALL';
 let searchTerm = '';
 let openId = null;
 let confirmDeleteId = null;
+let editingId = null;
 
 async function saveCustomers(){
   if(!configReady) return;
@@ -261,6 +262,12 @@ function escapeHtml(s){
 function setTodayDate(){
   const d = new Date();
   document.getElementById('custDate').value = d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+function restrictPhoneInput(input){
+  input.addEventListener('input', ()=>{
+    input.value = input.value.replace(/[^0-9]/g,'').slice(0,10);
+  });
 }
 
 function phoneLinksHtml(phone){
@@ -321,6 +328,81 @@ function renderList(){
     const body = document.createElement('div');
     body.className = 'entry-body' + (openId===c.id ? ' open' : '');
 
+    if(editingId===c.id){
+      body.innerHTML = `
+        <div class="row" style="margin-top:10px;">
+          <div class="field"><label>Customer Naam</label><input type="text" class="editName" value="${escapeHtml(c.name)}"></div>
+          <div class="field"><label>Phone</label><input type="tel" class="editPhone" value="${escapeHtml(c.phone||'')}" maxlength="10" inputmode="numeric" pattern="[0-9]{10}"></div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Interest / Product</label>
+            <select class="editInterest">
+              <option value="1BHK FLAT">1BHK FLAT</option>
+              <option value="2BHK FLAT">2BHK FLAT</option>
+              <option value="2BHK ROWHOUSE">2BHK ROWHOUSE</option>
+              <option value="3BHK ROWHOUSE">3BHK ROWHOUSE</option>
+            </select>
+          </div>
+          <div class="field"><label>Entry Karnar</label><select class="editEnteredBy"></select></div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Kai Rite Aavya</label>
+            <select class="editSource">
+              <option value="DIRECT">Jaate (Direct)</option>
+              <option value="BROKER">Broker Dwara</option>
+            </select>
+          </div>
+          <div class="field editBrokerField"><label>Broker Nu Naam</label><input type="text" class="editBrokerName" value="${escapeHtml(c.brokerName||'')}"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px;">
+          <button class="saveEditBtn">Save Karo</button>
+          <button class="cancelEditBtn secondary" type="button">Cancel</button>
+        </div>
+      `;
+      body.querySelector('.editInterest').value = c.interest || '1BHK FLAT';
+      restrictPhoneInput(body.querySelector('.editPhone'));
+      body.querySelector('.editSource').value = c.source || 'DIRECT';
+      const editEnteredBySel = body.querySelector('.editEnteredBy');
+      editEnteredBySel.innerHTML = team.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+      editEnteredBySel.value = c.enteredBy;
+      const brokerFieldEl = body.querySelector('.editBrokerField');
+      brokerFieldEl.style.display = (c.source==='BROKER') ? 'flex' : 'none';
+      body.querySelector('.editSource').addEventListener('change', (e)=>{
+        brokerFieldEl.style.display = (e.target.value==='BROKER') ? 'flex' : 'none';
+      });
+
+      body.querySelector('.saveEditBtn').addEventListener('click', async ()=>{
+        const newName = body.querySelector('.editName').value.trim();
+        const newPhone = body.querySelector('.editPhone').value.trim();
+        if(!newName){ alert('Customer nu naam nakho.'); return; }
+        if(!newPhone){ alert('Mobile number nakhvo jaruri chhe.'); return; }
+        if(newPhone.length!==10){ alert('Mobile number 10 ank no j hovo joie.'); return; }
+        const newSource = body.querySelector('.editSource').value;
+        const newBrokerName = newSource==='BROKER' ? body.querySelector('.editBrokerName').value.trim() : '';
+        if(newSource==='BROKER' && !newBrokerName){ alert('Broker nu naam nakhvu jaruri chhe.'); return; }
+        const dup = customers.find(x => x.id!==c.id && (x.phone||'').trim()===newPhone);
+        if(dup){ alert('Aa mobile number bija customer "' + dup.name + '" ma pehla thi save chhe.'); return; }
+
+        c.name = newName;
+        c.phone = newPhone;
+        c.interest = body.querySelector('.editInterest').value;
+        c.enteredBy = editEnteredBySel.value;
+        c.source = newSource;
+        c.brokerName = newBrokerName;
+        editingId = null;
+        await saveCustomers();
+      });
+      body.querySelector('.cancelEditBtn').addEventListener('click', ()=>{
+        editingId = null;
+        renderList();
+      });
+      entry.appendChild(body);
+      list.appendChild(entry);
+      return;
+    }
+
     let logsHtml = (c.log||[]).slice().reverse().map(l=>`
       <li class="log-item"><span class="when">${fmtTime(l.at)}</span><span class="who">${escapeHtml(l.by)}:</span> ${escapeHtml(l.note)}</li>
     `).join('');
@@ -339,7 +421,10 @@ function renderList(){
         <div class="status-btn SALE ${c.status==='SALE'?'on':''}" data-s="SALE">Sale Thai Gayu</div>
         <div class="status-btn REJECT ${c.status==='REJECT'?'on':''}" data-s="REJECT">Reject</div>
       </div>
-      <button class="deleteBtn" style="margin-top:12px;background:var(--reject);">Entry Delete Karo</button>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="editBtn secondary" type="button">Edit Karo</button>
+        <button class="deleteBtn" style="background:var(--reject);">Entry Delete Karo</button>
+      </div>
       <div class="delete-confirm" style="display:${confirmDeleteId===c.id ? 'flex' : 'none'};gap:8px;margin-top:10px;align-items:center;">
         <span style="font-size:12px;">Pakku delete karvu chhe? Aa revert nahi thai shake.</span>
         <button class="confirmDeleteBtn" style="background:var(--reject);">Haa, Delete Karo</button>
@@ -365,6 +450,12 @@ function renderList(){
         c.status = btn.dataset.s;
         await saveCustomers();
       });
+    });
+
+    body.querySelector('.editBtn').addEventListener('click', ()=>{
+      editingId = c.id;
+      confirmDeleteId = null;
+      renderList();
     });
 
     body.querySelector('.deleteBtn').addEventListener('click', ()=>{
@@ -404,6 +495,7 @@ document.getElementById('addBtn').addEventListener('click', async ()=>{
   const brokerName = source==='BROKER' ? document.getElementById('custBrokerName').value.trim() : '';
   if(!name){ alert('Customer nu naam nakho.'); return; }
   if(!phone){ alert('Mobile number nakhvo jaruri chhe.'); return; }
+  if(phone.length!==10){ alert('Mobile number 10 ank no j hovo joie.'); return; }
   if(source==='BROKER' && !brokerName){ alert('Broker dwara aavya chhe to Broker nu naam nakhvu jaruri chhe.'); return; }
   const dup = customers.find(c => (c.phone||'').trim() === phone);
   if(dup){
@@ -452,6 +544,7 @@ document.getElementById('searchBox').addEventListener('input', (e)=>{
 renderSelects();
 setTodayDate();
 startListening();
+restrictPhoneInput(document.getElementById('custPhone'));
 </script>
 </body>
 </html>
