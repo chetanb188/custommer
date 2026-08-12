@@ -157,7 +157,7 @@
   </header>
 
   <div class="note" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-    <span>⚠ Data is shared </span>
+    <span>⚠ Data is shared — all 5 team members see and can edit every entry here.</span>
     <span id="syncStatus" style="white-space:nowrap;">⏳ Connecting...</span>
   </div>
 
@@ -340,8 +340,47 @@ function phoneLinksHtml(phone){
   const waDigits = digits.length===10 ? '91'+digits : digits;
   return `${escapeHtml(clean)}
     <a href="tel:${digits}" title="Call Karo" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(--sale);border-radius:50%;margin-left:10px;text-decoration:none;vertical-align:middle;">📞</a>
-    <a href="https://wa.me/${waDigits}" target="_blank" rel="noopener" title="WhatsApp Karo" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#25D366;border-radius:50%;margin-left:10px;text-decoration:none;vertical-align:middle;">💬</a>`;
+    <a href="https://wa.me/${waDigits}" target="_blank" rel="noopener" title="WhatsApp Karo" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#25D366;border-radius:50%;margin-left:10px;text-decoration:none;vertical-align:middle;">💬</a>
+    <span style="position:relative;display:inline-block;vertical-align:middle;margin-left:10px;">
+      <button type="button" class="docMenuBtn" data-wa="${waDigits}" title="Document List Mokalo" style="width:26px;height:26px;padding:0;border-radius:50%;background:var(--mustard);box-shadow:none;">📄</button>
+      <span class="docMenu" style="display:none;position:absolute;top:32px;left:0;z-index:10;background:#fff;border:1.5px solid var(--line);border-radius:8px;box-shadow:0 6px 16px -6px rgba(27,42,74,0.4);padding:8px;min-width:150px;">
+        <button type="button" class="docOption" data-type="BUSINESS" data-wa="${waDigits}" style="display:block;width:100%;text-align:left;margin-bottom:6px;font-size:11px;padding:7px 10px;">1. Business</button>
+        <button type="button" class="docOption" data-type="JOB" data-wa="${waDigits}" style="display:block;width:100%;text-align:left;font-size:11px;padding:7px 10px;">2. Job</button>
+      </span>
+    </span>`;
 }
+
+const DOC_LISTS = {
+  BUSINESS: ['PAN','Aadharcard','3 years IT return','1 year bank statement'],
+  JOB: ['PAN','Aadharcard','6 month salary slip','1 year bank statement']
+};
+
+function sendDocList(waDigits, type){
+  const items = DOC_LISTS[type];
+  const label = type==='BUSINESS' ? 'Business' : 'Job';
+  const lines = items.map((it,i)=> (i+1) + '. ' + it).join('\n');
+  const msg = '*' + label + '*' + ' documents joie chhe:\n' + lines;
+  window.open('https://wa.me/' + waDigits + '?text=' + encodeURIComponent(msg), '_blank');
+}
+
+document.addEventListener('click', (e)=>{
+  const docBtn = e.target.closest('.docMenuBtn');
+  if(docBtn){
+    const menu = docBtn.nextElementSibling;
+    document.querySelectorAll('.docMenu').forEach(m=>{ if(m!==menu) m.style.display='none'; });
+    menu.style.display = (menu.style.display==='none' || !menu.style.display) ? 'block' : 'none';
+    return;
+  }
+  const docOption = e.target.closest('.docOption');
+  if(docOption){
+    sendDocList(docOption.dataset.wa, docOption.dataset.type);
+    docOption.closest('.docMenu').style.display = 'none';
+    return;
+  }
+  if(!e.target.closest('.docMenu')){
+    document.querySelectorAll('.docMenu').forEach(m=> m.style.display='none');
+  }
+});
 
 function fmtTime(ts){
   const d = new Date(ts);
@@ -629,6 +668,7 @@ restrictPhoneInput(document.getElementById('custPhone'));
 </script>
 </body>
 </html>
+
 
 
 
