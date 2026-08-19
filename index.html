@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="shortcut icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Customer Ledger</title>
+<style>
+  :root{
+    --paper:#EFE8D8;
+    --paper-dark:#E3DAC4;
+    --ink:#23252B;
+    --navy:#1B2A4A;
+    --navy-light:#2E4270;
+    --mustard:#D9A441;
+    --sale:#3F7D4F;
+    --reject:#A63D40;
+    --pending:#8A6D3B;
+    --line:#c9bfa2;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 1px 1px, rgba(27,42,74,0.06) 1px, transparent 0) 0 0/22px 22px,
+      linear-gradient(160deg, #F3EEDF 0%, var(--paper) 45%, #E9E0C9 100%);
+    background-attachment:fixed;
+    color:var(--ink);
+    font-family:'Courier New', ui-monospace, monospace;
+    font-weight:bold;
+    min-height:100vh;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:24px 16px 60px;}
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:4px double var(--navy);
+    padding-bottom:14px;margin-bottom:22px;flex-wrap:wrap;gap:10px;
+  }
+  header h1{
+    font-family:Georgia, 'Times New Roman', serif;
+    font-size:30px;letter-spacing:0.5px;margin:0;color:var(--navy);
+    font-weight:bold;
+    text-shadow:1px 1px 0 rgba(217,164,65,0.35);
+  }
+  header h1::before{content:"📒 ";}
+  header .sub{font-size:12px;color:#3a352a;margin-top:4px;font-weight:bold;letter-spacing:0.5px;}
+
+  .panel{
+    background:linear-gradient(180deg,#ffffff, #fdfbf5);
+    border:1px solid var(--line);border-radius:10px;
+    padding:20px;margin-bottom:24px;
+    box-shadow:0 1px 2px rgba(27,42,74,0.06), 0 8px 20px -10px rgba(27,42,74,0.25);
+  }
+  .panel h2{
+    margin:0 0 14px;font-family:Georgia,serif;font-size:17px;color:var(--navy);font-weight:bold;
+    padding-bottom:8px;border-bottom:2px solid var(--paper-dark);
+  }
+  .row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+  .field{flex:1;min-width:140px;display:flex;flex-direction:column;gap:5px;}
+  label{font-size:9px;color:#221f16;text-transform:uppercase;letter-spacing:0.8px;font-weight:bold;}
+  input[type=text], input[type=tel], select, textarea{
+    font-family:inherit;font-size:14px;padding:9px 10px;border:1.5px solid var(--line);
+    border-radius:6px;background:var(--paper);color:var(--ink);font-weight:bold;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  input[type=text]:focus, input[type=tel]:focus, select:focus, textarea:focus{
+    outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(27,42,74,0.12);
+  }
+  textarea{resize:vertical;min-height:50px;}
+  input[readonly]{background:var(--paper-dark);color:#221f16;cursor:default;}
+  button{
+    font-family:inherit;font-size:13px;padding:10px 18px;border:none;border-radius:6px;
+    cursor:pointer;background:linear-gradient(180deg,var(--navy-light),var(--navy));color:#fff;
+    letter-spacing:0.3px;font-weight:bold;
+    box-shadow:0 2px 0 rgba(0,0,0,0.15), 0 4px 10px -4px rgba(27,42,74,0.5);
+    transition:transform .1s, box-shadow .1s, background .15s;
+  }
+  button:hover{transform:translateY(-1px);box-shadow:0 3px 0 rgba(0,0,0,0.15), 0 8px 14px -4px rgba(27,42,74,0.55);}
+  button:active{transform:translateY(1px);box-shadow:0 1px 0 rgba(0,0,0,0.15);}
+  button.secondary{background:#fff;color:var(--navy);border:1.5px solid var(--navy);box-shadow:none;}
+  button.secondary:hover{background:var(--paper-dark);transform:none;box-shadow:none;}
+
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;align-items:center;}
+  .filters select{padding:7px 10px;font-size:12px;font-weight:bold;border-radius:20px;}
+  .tab{
+    padding:7px 14px;border:1.5px solid var(--line);border-radius:20px;font-size:12px;
+    background:#fff;cursor:pointer;font-weight:bold;transition:all .15s;
+  }
+  .tab:hover{border-color:var(--navy);}
+  .tab.active{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:0 3px 8px -3px rgba(27,42,74,0.6);}
+
+  .entry{
+    background:linear-gradient(180deg,#ffffff,#fdfbf5);
+    border:1.5px solid var(--line);border-radius:10px;margin-bottom:14px;
+    overflow:hidden;
+    box-shadow:0 1px 2px rgba(27,42,74,0.05), 0 6px 16px -10px rgba(27,42,74,0.3);
+    transition:box-shadow .15s, transform .15s;
+  }
+  .entry:hover{box-shadow:0 2px 4px rgba(27,42,74,0.08), 0 10px 22px -10px rgba(27,42,74,0.4);}
+  .entry-head{
+    display:flex;justify-content:space-between;align-items:center;padding:14px 16px;
+    cursor:pointer;gap:10px;flex-wrap:wrap;border-left:4px solid var(--mustard);
+  }
+  .entry-head:hover{background:var(--paper-dark);}
+  .entry-name{font-family:Georgia,serif;font-size:17px;font-weight:bold;color:var(--navy);}
+  .entry-meta{font-size:11px;color:#221f16;font-weight:bold;opacity:0.85;}
+  .stamp{
+    font-size:10px;font-weight:bold;letter-spacing:1.5px;padding:5px 12px;
+    border:2.5px solid; border-radius:4px; transform:rotate(-4deg); text-transform:uppercase;
+    box-shadow:0 0 0 2px currentColor inset, 2px 2px 0 rgba(0,0,0,0.06);
+    background:rgba(255,255,255,0.6);
+  }
+  .stamp.PENDING{color:var(--pending);border-color:var(--pending);}
+  .stamp.SALE{color:var(--sale);border-color:var(--sale);}
+  .stamp.REJECT{color:var(--reject);border-color:var(--reject);}
+
+  .entry-body{padding:4px 16px 18px;border-top:2px dashed var(--line);display:none;}
+  .entry-body.open{display:block;animation:fadeIn .15s ease-in;}
+  @keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
+  .info-line{font-size:12px;margin:10px 0 6px;color:#171410;font-weight:bold;}
+  .log-list{margin:10px 0;padding-left:0;list-style:none;}
+  .log-item{
+    font-size:12px;padding:9px 12px;background:var(--paper);border-left:3px solid var(--mustard);
+    margin-bottom:7px;border-radius:0 6px 6px 0;font-weight:bold;
+    box-shadow:1px 1px 3px rgba(0,0,0,0.05);
+  }
+  .log-item .who{font-weight:bold;color:var(--navy);}
+  .log-item .when{color:#221f16;font-size:10px;float:right;font-weight:bold;opacity:0.75;}
+  .status-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .status-btn{
+    font-size:11px;padding:7px 12px;border-radius:20px;cursor:pointer;border:1.5px solid var(--line);
+    background:#fff;font-weight:bold;transition:all .15s;
+  }
+  .status-btn:hover{border-color:var(--navy);}
+  .status-btn.PENDING.on{background:var(--pending);color:#fff;border-color:var(--pending);}
+  .status-btn.SALE.on{background:var(--sale);color:#fff;border-color:var(--sale);}
+  .status-btn.REJECT.on{background:var(--reject);color:#fff;border-color:var(--reject);}
+
+  .add-log{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .add-log select{flex:0 0 120px;}
+  .add-log input{flex:1;min-width:120px;}
+
+  .empty{text-align:center;padding:44px 10px;color:#2e2a1e;font-size:13px;font-weight:bold;}
+  .note{
+    font-size:11px;color:#5c4813;margin-bottom:18px;font-weight:bold;
+    background:rgba(217,164,65,0.18);border:1px solid var(--mustard);border-radius:6px;padding:10px 14px;
+  }
+  .loading{text-align:center;padding:30px;color:#2e2a1e;font-weight:bold;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Customer Form</h1>
+      <div class="sub">Shared entry book</div>
+    </div>
+  </header>
+
+  <div class="note" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+    <span>⚠ Data is shared — all 5 team members see and can edit every entry here.</span>
+    <span id="syncStatus" style="white-space:nowrap;">⏳ Connecting...</span>
+  </div>
+
+  <div class="panel">
+    <h2 id="formToggle" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+      <span>+ Nava Customer Entry</span>
+      <span id="formToggleIcon" style="font-size:13px;">▶</span>
+    </h2>
+    <div id="formBody" style="display:none;">
+    <div class="row">
+      <div class="field">
+        <label>Customer Naam</label>
+        <input type="text" id="custName" placeholder="e.g. Rakesh Patel">
+      </div>
+      <div class="field">
+        <label>Phone</label>
+        <input type="tel" id="custPhone" placeholder="98xxxxxxxx" maxlength="10" inputmode="numeric" pattern="[0-9]{10}">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Interest / Product</label>
+        <select id="custInterest">
+          <option value="1BHK FLAT">1BHK FLAT</option>
+          <option value="2BHK FLAT">2BHK FLAT</option>
+          <option value="2BHK ROWHOUSE">2BHK ROWHOUSE</option>
+          <option value="3BHK ROWHOUSE">3BHK ROWHOUSE</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Entry Date</label>
+        <input type="text" id="custDate" readonly>
+      </div>
+      <div class="field">
+        <label>Entry Karnar (Aapnu Naam)</label>
+        <select id="custEnteredBy"></select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Kai Rite Aavya</label>
+        <select id="custSource">
+          <option value="DIRECT">Jaate (Direct)</option>
+          <option value="BROKER">Broker Dwara</option>
+        </select>
+      </div>
+      <div class="field" id="brokerNameField" style="display:none;">
+        <label>Broker Nu Naam</label>
+        <input type="text" id="custBrokerName" placeholder="e.g. Suresh bhai">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Occupation (Business)</label>
+        <input type="text" id="custOccupation" placeholder="e.g. Kirana store, Job, Farming">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field" style="flex:0 0 100%;">
+        <label>Pehla Note (optional)</label>
+        <textarea id="custNote" placeholder="Kai vaat thai hoy to..."></textarea>
+      </div>
+    </div>
+    <button id="addBtn">Entry Save Karo</button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="tab active" data-status="ALL">Badha</div>
+    <div class="tab" data-status="PENDING">Pending</div>
+    <div class="tab" data-status="SALE">Sale</div>
+    <div class="tab" data-status="REJECT">Reject</div>
+    <select id="personFilter"><option value="ALL">Badha members</option></select>
+    <input type="text" id="searchBox" placeholder="🔍 Naam ke phone thi shodho..." style="flex:1;min-width:160px;padding:6px 10px;font-size:12px;border:1px solid var(--line);border-radius:20px;background:#fff;font-weight:bold;">
+  </div>
+
+  <div id="list"><div class="loading">Loading entries...</div></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ====== 1) AAHIYA TAMARU FIREBASE CONFIG PASTE KARO ======
+   Firebase console (console.firebase.google.com) ma free project banavi,
+   Firestore Database enable kari, Web app add kari, config copy karo. */
+const firebaseConfig = {
+  apiKey: "AIzaSyDi1vY10SUKvE7xLbE12qfk3GJSgdx51wQ",
+  authDomain: "web-app-9a17b.firebaseapp.com",
+  projectId: "web-app-9a17b",
+  storageBucket: "web-app-9a17b.firebasestorage.app",
+  messagingSenderId: "695751532381",
+  appId: "1:695751532381:web:051904e1bc0c2c2b6392b4",
+  measurementId: "G-04C81199JW"
+};
+/* ========================================================== */
+
+let db = null;
+let configReady = firebaseConfig.apiKey !== "PASTE_API_KEY";
+if(configReady){
+  const app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+}
+const LEDGER_DOC = 'ledger_data';
+
+const team = ['HEMANSHUBHAI','VIPULBHAI','DILIPBHAI','PAKALAL','CHETAN'];
+let customers = [];
+let statusFilter = 'ALL';
+let personFilter = 'ALL';
+let searchTerm = '';
+let openId = null;
+let confirmDeleteId = null;
+let editingId = null;
+
+async function saveCustomers(){
+  if(!configReady) return;
+  try{
+    await setDoc(doc(db, 'customer_ledger', LEDGER_DOC), { list: customers });
+  }catch(e){ console.error('save error', e); alert('Save ma error aavi: ' + e.message); }
+}
+
+function startListening(){
+  if(!configReady){
+    document.getElementById('list').innerHTML =
+      '<div class="empty">⚠ Firebase config set nathi thayu. Script ni upar "firebaseConfig" ma tamara Firebase project ni details paste karo, pachi aa file save/refresh karo.</div>';
+    setSyncStatus('offline', '⚪ Config nathi');
+    return;
+  }
+  onSnapshot(doc(db, 'customer_ledger', LEDGER_DOC), (snap)=>{
+    customers = (snap.exists() && snap.data().list) ? snap.data().list : [];
+    renderList();
+    const fromCache = snap.metadata && snap.metadata.fromCache;
+    if(fromCache){
+      setSyncStatus('offline', '🟠 Offline (last saved data)');
+    }else{
+      const t = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+      setSyncStatus('online', '🟢 Synced · ' + t);
+    }
+  }, (err)=>{
+    console.error(err);
+    document.getElementById('list').innerHTML = '<div class="empty">⚠ Data load nathi thayu: ' + err.message + '</div>';
+    setSyncStatus('error', '🔴 Sync Error');
+  });
+}
+
+function setSyncStatus(state, text){
+  const el = document.getElementById('syncStatus');
+  if(!el) return;
+  el.textContent = text;
+  el.style.color = state==='online' ? 'var(--sale)' : state==='error' ? 'var(--reject)' : '#8a6d3b';
+}
+
+function renderSelects(){
+  const sel = document.getElementById('custEnteredBy');
+  sel.innerHTML = team.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+  const pf = document.getElementById('personFilter');
+  pf.innerHTML = '<option value="ALL">Badha members</option>' + team.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+  pf.value = personFilter;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function setTodayDate(){
+  const d = new Date();
+  document.getElementById('custDate').value = d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+function restrictPhoneInput(input){
+  input.addEventListener('input', ()=>{
+    input.value = input.value.replace(/[^0-9]/g,'').slice(0,10);
+  });
+}
+
+function phoneLinksHtml(phone){
+  const clean = (phone||'').trim();
+  if(!clean) return '—';
+  const digits = clean.replace(/[^0-9]/g,'');
+  const waDigits = digits.length===10 ? '91'+digits : digits;
+  return `${escapeHtml(clean)}
+    <a href="tel:${digits}" title="Call Karo" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(--sale);border-radius:50%;margin-left:10px;text-decoration:none;vertical-align:middle;">📞</a>
+    <a href="https://wa.me/${waDigits}" target="_blank" rel="noopener" title="WhatsApp Karo" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#25D366;border-radius:50%;margin-left:10px;text-decoration:none;vertical-align:middle;">💬</a>
+    <span style="position:relative;display:inline-block;vertical-align:middle;margin-left:10px;">
+      <button type="button" class="docMenuBtn" data-wa="${waDigits}" title="Document List Mokalo" style="width:26px;height:26px;padding:0;border-radius:50%;background:var(--mustard);box-shadow:none;">📄</button>
+      <span class="docMenu" style="display:none;position:absolute;top:32px;left:0;z-index:10;background:#fff;border:1.5px solid var(--line);border-radius:8px;box-shadow:0 6px 16px -6px rgba(27,42,74,0.4);padding:8px;min-width:150px;">
+        <button type="button" class="docOption" data-type="BUSINESS" data-wa="${waDigits}" style="display:block;width:100%;text-align:left;margin-bottom:6px;font-size:11px;padding:7px 10px;">1. Business</button>
+        <button type="button" class="docOption" data-type="JOB" data-wa="${waDigits}" style="display:block;width:100%;text-align:left;font-size:11px;padding:7px 10px;">2. Job</button>
+      </span>
+    </span>`;
+}
+
+const DOC_LISTS = {
+  BUSINESS: ['PAN','Aadharcard','3 years IT return','1 year bank statement'],
+  JOB: ['PAN','Aadharcard','6 month salary slip','1 year bank statement']
+};
+
+function sendDocList(waDigits, type){
+  const items = DOC_LISTS[type];
+  const label = type==='BUSINESS' ? 'Business' : 'Job';
+  const lines = items.map((it,i)=> (i+1) + '. ' + it).join('\n');
+  const msg = '*' + label + '*' + ' documents joie chhe:\n' + lines;
+  window.open('https://wa.me/' + waDigits + '?text=' + encodeURIComponent(msg), '_blank');
+}
+
+document.addEventListener('click', (e)=>{
+  const docBtn = e.target.closest('.docMenuBtn');
+  if(docBtn){
+    const menu = docBtn.nextElementSibling;
+    document.querySelectorAll('.docMenu').forEach(m=>{ if(m!==menu) m.style.display='none'; });
+    menu.style.display = (menu.style.display==='none' || !menu.style.display) ? 'block' : 'none';
+    return;
+  }
+  const docOption = e.target.closest('.docOption');
+  if(docOption){
+    sendDocList(docOption.dataset.wa, docOption.dataset.type);
+    docOption.closest('.docMenu').style.display = 'none';
+    return;
+  }
+  if(!e.target.closest('.docMenu')){
+    document.querySelectorAll('.docMenu').forEach(m=> m.style.display='none');
+  }
+});
+
+function fmtTime(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) + ' ' + d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}
+
+function renderList(){
+  const list = document.getElementById('list');
+  let filtered = customers.filter(c=>{
+    if(statusFilter!=='ALL' && c.status!==statusFilter) return false;
+    if(personFilter!=='ALL' && c.enteredBy!==personFilter) return false;
+    if(searchTerm){
+      const t = searchTerm.toLowerCase();
+      const inName = (c.name||'').toLowerCase().includes(t);
+      const inPhone = (c.phone||'').toLowerCase().includes(t);
+      if(!inName && !inPhone) return false;
+    }
+    return true;
+  });
+  filtered.sort((a,b)=> b.createdAt - a.createdAt);
+
+  if(filtered.length===0){
+    list.innerHTML = '<div class="empty">Koi entry nathi. Upar thi navi entry ummerо.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  filtered.forEach(c=>{
+    const entry = document.createElement('div');
+    entry.className = 'entry';
+
+    const head = document.createElement('div');
+    head.className = 'entry-head';
+    head.innerHTML = `
+      <div>
+        <div class="entry-name">${escapeHtml(c.name)}</div>
+        <div class="entry-meta">${escapeHtml(c.interest||'—')} · Entry: ${escapeHtml(c.enteredBy)} · ${fmtTime(c.createdAt)}${c.source==='BROKER' ? ' · Broker: ' + escapeHtml(c.brokerName||'—') : ' · Jaate'}</div>
+      </div>
+      <div class="stamp ${c.status}">${c.status}</div>
+    `;
+    head.addEventListener('click', ()=>{
+      openId = (openId===c.id) ? null : c.id;
+      renderList();
+    });
+    entry.appendChild(head);
+
+    const body = document.createElement('div');
+    body.className = 'entry-body' + (openId===c.id ? ' open' : '');
+
+    if(editingId===c.id){
+      body.innerHTML = `
+        <div class="row" style="margin-top:10px;">
+          <div class="field"><label>Customer Naam</label><input type="text" class="editName" value="${escapeHtml(c.name)}"></div>
+          <div class="field"><label>Phone</label><input type="tel" class="editPhone" value="${escapeHtml(c.phone||'')}" maxlength="10" inputmode="numeric" pattern="[0-9]{10}"></div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Interest / Product</label>
+            <select class="editInterest">
+              <option value="1BHK FLAT">1BHK FLAT</option>
+              <option value="2BHK FLAT">2BHK FLAT</option>
+              <option value="2BHK ROWHOUSE">2BHK ROWHOUSE</option>
+              <option value="3BHK ROWHOUSE">3BHK ROWHOUSE</option>
+            </select>
+          </div>
+          <div class="field"><label>Entry Karnar</label><select class="editEnteredBy"></select></div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Kai Rite Aavya</label>
+            <select class="editSource">
+              <option value="DIRECT">Jaate (Direct)</option>
+              <option value="BROKER">Broker Dwara</option>
+            </select>
+          </div>
+          <div class="field editBrokerField"><label>Broker Nu Naam</label><input type="text" class="editBrokerName" value="${escapeHtml(c.brokerName||'')}"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Occupation (Business)</label><input type="text" class="editOccupation" value="${escapeHtml(c.occupation||'')}"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
+          <button class="saveEditBtn">Save Karo</button>
+          <button class="cancelEditBtn secondary" type="button">Cancel</button>
+        </div>
+      `;
+      body.querySelector('.editInterest').value = c.interest || '1BHK FLAT';
+      restrictPhoneInput(body.querySelector('.editPhone'));
+      body.querySelector('.editSource').value = c.source || 'DIRECT';
+      const editEnteredBySel = body.querySelector('.editEnteredBy');
+      editEnteredBySel.innerHTML = team.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+      editEnteredBySel.value = c.enteredBy;
+      const brokerFieldEl = body.querySelector('.editBrokerField');
+      brokerFieldEl.style.display = (c.source==='BROKER') ? 'flex' : 'none';
+      body.querySelector('.editSource').addEventListener('change', (e)=>{
+        brokerFieldEl.style.display = (e.target.value==='BROKER') ? 'flex' : 'none';
+      });
+
+      body.querySelector('.saveEditBtn').addEventListener('click', async ()=>{
+        const newName = body.querySelector('.editName').value.trim();
+        const newPhone = body.querySelector('.editPhone').value.trim();
+        if(!newName){ alert('Customer nu naam nakho.'); return; }
+        if(!newPhone){ alert('Mobile number nakhvo jaruri chhe.'); return; }
+        if(newPhone.length!==10){ alert('Mobile number 10 ank no j hovo joie.'); return; }
+        const newSource = body.querySelector('.editSource').value;
+        const newBrokerName = newSource==='BROKER' ? body.querySelector('.editBrokerName').value.trim() : '';
+        if(newSource==='BROKER' && !newBrokerName){ alert('Broker nu naam nakhvu jaruri chhe.'); return; }
+        const dup = customers.find(x => x.id!==c.id && (x.phone||'').trim()===newPhone);
+        if(dup){ alert('Aa mobile number bija customer "' + dup.name + '" ma pehla thi save chhe.'); return; }
+
+        c.name = newName;
+        c.phone = newPhone;
+        c.interest = body.querySelector('.editInterest').value;
+        c.enteredBy = editEnteredBySel.value;
+        c.source = newSource;
+        c.brokerName = newBrokerName;
+        c.occupation = body.querySelector('.editOccupation').value.trim();
+        editingId = null;
+        await saveCustomers();
+      });
+      body.querySelector('.cancelEditBtn').addEventListener('click', ()=>{
+        editingId = null;
+        renderList();
+      });
+      entry.appendChild(body);
+      list.appendChild(entry);
+      return;
+    }
+
+    let logsHtml = (c.log||[]).slice().reverse().map(l=>`
+      <li class="log-item"><span class="when">${fmtTime(l.at)}</span><span class="who">${escapeHtml(l.by)}:</span> ${escapeHtml(l.note)}</li>
+    `).join('');
+    if(!logsHtml) logsHtml = '<div class="info-line">Hju koi vaatchit nondh nathi.</div>';
+
+    body.innerHTML = `
+      <div class="info-line">Phone: ${phoneLinksHtml(c.phone)}</div>
+      ${c.occupation ? '<div class="info-line">Occupation: ' + escapeHtml(c.occupation) + '</div>' : ''}
+      <ul class="log-list">${logsHtml}</ul>
+      <div class="add-log">
+        <select class="logBy"></select>
+        <input type="text" class="logNote" placeholder="Su vaat thai? (e.g. call kario, price puchi)">
+        <button class="addLogBtn">Nondh Karo</button>
+      </div>
+      <div class="status-row">
+        <div class="status-btn PENDING ${c.status==='PENDING'?'on':''}" data-s="PENDING">Pending</div>
+        <div class="status-btn SALE ${c.status==='SALE'?'on':''}" data-s="SALE">Sale Thai Gayu</div>
+        <div class="status-btn REJECT ${c.status==='REJECT'?'on':''}" data-s="REJECT">Reject</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+        <button class="editBtn secondary" type="button">Edit Karo</button>
+        <button class="deleteBtn" style="background:var(--reject);">Entry Delete Karo</button>
+      </div>
+      <div class="delete-confirm" style="display:${confirmDeleteId===c.id ? 'flex' : 'none'};gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap;">
+        <span style="font-size:12px;">Pakku delete karvu chhe? Aa revert nahi thai shake.</span>
+        <button class="confirmDeleteBtn" style="background:var(--reject);">Haa, Delete Karo</button>
+        <button class="cancelDeleteBtn secondary" type="button">Na, Rakho</button>
+      </div>
+    `;
+
+    const logSel = body.querySelector('.logBy');
+    logSel.innerHTML = team.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+
+    body.querySelector('.addLogBtn').addEventListener('click', async ()=>{
+      const noteInp = body.querySelector('.logNote');
+      const note = noteInp.value.trim();
+      if(!note) return;
+      c.log = c.log || [];
+      c.log.push({by: logSel.value, note, at: Date.now()});
+      noteInp.value = '';
+      await saveCustomers();
+    });
+
+    body.querySelectorAll('.status-btn').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        c.status = btn.dataset.s;
+        await saveCustomers();
+      });
+    });
+
+    body.querySelector('.editBtn').addEventListener('click', ()=>{
+      editingId = c.id;
+      confirmDeleteId = null;
+      renderList();
+    });
+
+    body.querySelector('.deleteBtn').addEventListener('click', ()=>{
+      confirmDeleteId = c.id;
+      renderList();
+    });
+    if(confirmDeleteId===c.id){
+      body.querySelector('.confirmDeleteBtn').addEventListener('click', async ()=>{
+        customers = customers.filter(x=>x.id!==c.id);
+        confirmDeleteId = null;
+        openId = null;
+        await saveCustomers();
+      });
+      body.querySelector('.cancelDeleteBtn').addEventListener('click', ()=>{
+        confirmDeleteId = null;
+        renderList();
+      });
+    }
+
+    entry.appendChild(body);
+    list.appendChild(entry);
+  });
+}
+
+document.getElementById('formToggle').addEventListener('click', ()=>{
+  const body = document.getElementById('formBody');
+  const icon = document.getElementById('formToggleIcon');
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  icon.textContent = isOpen ? '▶' : '▼';
+});
+
+document.getElementById('custSource').addEventListener('change', (e)=>{
+  document.getElementById('brokerNameField').style.display = (e.target.value==='BROKER') ? 'flex' : 'none';
+});
+
+document.getElementById('addBtn').addEventListener('click', async ()=>{
+  if(!configReady){ alert('Pehla Firebase config set karo (script ni upar).'); return; }
+  const name = document.getElementById('custName').value.trim();
+  const phone = document.getElementById('custPhone').value.trim();
+  const interest = document.getElementById('custInterest').value.trim();
+  const enteredBy = document.getElementById('custEnteredBy').value;
+  const note = document.getElementById('custNote').value.trim();
+  const source = document.getElementById('custSource').value;
+  const brokerName = source==='BROKER' ? document.getElementById('custBrokerName').value.trim() : '';
+  const occupation = document.getElementById('custOccupation').value.trim();
+  if(!name){ alert('Customer nu naam nakho.'); return; }
+  if(!phone){ alert('Mobile number nakhvo jaruri chhe.'); return; }
+  if(phone.length!==10){ alert('Mobile number 10 ank no j hovo joie.'); return; }
+  if(source==='BROKER' && !brokerName){ alert('Broker dwara aavya chhe to Broker nu naam nakhvu jaruri chhe.'); return; }
+  const dup = customers.find(c => (c.phone||'').trim() === phone);
+  if(dup){
+    alert('Aa mobile number pehla thi j save chhe — "' + dup.name + '" na naam thi entry chhe. Duplicate entry save nahi thai.');
+    return;
+  }
+
+  const entry = {
+    id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    name, phone, interest, enteredBy, source, brokerName, occupation,
+    status: 'PENDING',
+    createdAt: Date.now(),
+    log: note ? [{by: enteredBy, note, at: Date.now()}] : []
+  };
+  customers.push(entry);
+  await saveCustomers();
+
+  document.getElementById('custName').value='';
+  document.getElementById('custPhone').value='';
+  document.getElementById('custNote').value='';
+  document.getElementById('custBrokerName').value='';
+  document.getElementById('custOccupation').value='';
+  document.getElementById('custSource').value='DIRECT';
+  document.getElementById('brokerNameField').style.display='none';
+  setTodayDate();
+
+  document.getElementById('formBody').style.display='none';
+  document.getElementById('formToggleIcon').textContent='▶';
+
+  openId = entry.id;
+});
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    statusFilter = tab.dataset.status;
+    renderList();
+  });
+});
+document.getElementById('personFilter').addEventListener('change', (e)=>{
+  personFilter = e.target.value;
+  renderList();
+});
+document.getElementById('searchBox').addEventListener('input', (e)=>{
+  searchTerm = e.target.value.trim();
+  renderList();
+});
+
+renderSelects();
+setTodayDate();
+startListening();
+restrictPhoneInput(document.getElementById('custPhone'));
+</script>
+</body>
+</html>
